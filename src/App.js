@@ -3,31 +3,43 @@ import React, { useState, useEffect } from 'react'
 import { Button, FormControl, InputLabel, Input } from '@material-ui/core'
 import './App.css';
 import Message from './Message';
+import db from './firebase';
+import firebase from 'firebase'
+import FlipMove from 'react-flip-move'
 
 function App() {
 
   const [input, setInput] = useState('')
-  const [messages, setMessages] = useState([{username: 'Dee', text: 'Hello People'},
-    { username: 'John', text: 'Hello Dee'},
-    { username: 'Ramsey', text: 'Your are here'}])
+  const [messages, setMessages] = useState([])
   const [userName, setUserName] = useState('')
 
   useEffect(() => {
-    setUserName(prompt('Please enter your name'))    
+    setUserName(prompt('Please enter your name'))
   }, [])
 
+  useEffect(() => {
+    db.collection('messages')
+      .orderBy('timestamp', "asc")
+      .onSnapshot(snapshot => {
+        setMessages(snapshot.docs.map(doc => ({ id: doc.id, message: doc.data() })))
+      })
+  }, [])
 
   const sendMessage = (event) => {
     event.preventDefault()
 
-    setMessages([...messages, {username: userName, text: input}])
+    db.collection('messages').add({
+      message: input,
+      username: userName,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    })
     setInput('');
   }
 
   return (
     <div className="App">
       <h1>Hello Guys</h1>
-  <h2>Welcome {userName}</h2>
+      <h2>Welcome {userName}</h2>
 
 
 
@@ -43,13 +55,16 @@ function App() {
         </FormControl>
       </form>
 
-      {
-        messages.map((msg) => (
-          <Message 
-          username={userName}
-          message={msg}/>
-        ))
-      }
+      <FlipMove>
+        {
+          messages.map(({ id, message }) => (
+            <Message
+              key={id}
+              username={userName}
+              message={message} />
+          ))
+        }
+      </FlipMove>
 
     </div>
   );
