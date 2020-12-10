@@ -44,10 +44,10 @@ function App() {
       </form>
 
       {
-        messages.map(msg => (
+        messages.map((msg) => (
           <Message 
-          userName={msg.username}
-          message={msg.text}/>
+          username={userName}
+          message={msg}/>
         ))
       }
 
